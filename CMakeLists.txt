@@ -5,4 +5,6 @@ set(CMAKE_CXX_STANDARD 14)
 
 add_executable(data_fusion_db
         main.cpp
-        SequentialFile.h)
+        SequentialFile.h
+        ISAMSparseIndex.h
+        ExtendibleHashing.h)
