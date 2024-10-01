@@ -7,4 +7,6 @@ add_executable(data_fusion_db
         main.cpp
         SequentialFile.h
         ISAMSparseIndex.h
-        ExtendibleHashing.h)
+        ExtendibleHashing.h
+        Compiler.h
+)

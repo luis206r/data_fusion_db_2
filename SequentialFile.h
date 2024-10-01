@@ -19,6 +19,7 @@
 #include <iomanip>
 #include<cstdio>
 #include<cmath>
+#include<chrono>
 //#include<filesystem>
 
 using namespace std;
@@ -150,11 +151,13 @@ public:
     }
 
     void loadData(fstream &d_file, fstream &a_file) {
+
+        d_file.seekg(0, ios::beg);
         Header header;
         d_file.read(reinterpret_cast<char *>(&header), sizeof(Header));
         this->data_size = header.cur_size;
         this->data_max_size = header.max_size;
-
+        a_file.seekg(0, ios::beg);
         int a_sz;
         a_file.read(reinterpret_cast<char *>(&a_sz), sizeof(int));
         this->aux_size = a_sz;
@@ -166,6 +169,8 @@ public:
     }
 
     bool search(string nombre){
+        //auto inicio = std::chrono::high_resolution_clock::now();
+
         char array[20];
         strncpy(array, nombre.c_str(), sizeof(array) - 1);
         // Asegurarse de que el array esté null-terminado
@@ -174,9 +179,15 @@ public:
         Record record;
         record.setName(array);
         return search(record);
+        //auto fin = std::chrono::high_resolution_clock::now();
+        //std::chrono::duration<double, std::milli> duracion = fin - inicio;
+        //std::cout << "La búsqueda tardó " << duracion.count() << " ms en ejecutarse." << std::endl;
+
     }
 
     vector<Record> range_search(string nombre1, string nombre2){
+        auto inicio = std::chrono::high_resolution_clock::now();
+
         char array1[20];
         strncpy(array1, nombre1.c_str(), sizeof(array1) - 1);
         // Asegurarse de que el array esté null-terminado
@@ -201,45 +212,56 @@ public:
         else if(result1[1].first == -3 ||result1[1].first == -4) return result;
         else initial_rec = result1[2]; //el mayor
 
-        if(result2[1].first!=-1 && result2[1].first!=-2 && result2[1].first!=-3 && result2[1].first!=-4) final_rec
-                                                                                                                 =
-                                                                                                                         result2[1];
+        if(result2[1].first!=-1) final_rec=result2[1];
         else if(result2[1].first==-2) return result;//inicio del dat
         //para el siguiente escenario iterar hasta el final del aux y buscar los mayores
         else if(result2[1].first == -3) final_rec =  make_pair(data_size-1, 'd');
-        else if(result1[1].first == -4) final_rec =  make_pair(aux_size-1, 'a');
-        else initial_rec = result2[1]; //el menor
+        else if(result2[1].first == -4) final_rec =  make_pair(aux_size-1, 'a');
+        else final_rec = result2[0]; //el menor
 
         //iterar
-
+        cout<<"\nvalores del range initial: "<<initial_rec.first<<" "<<initial_rec.second;
+        cout<<"\nvalores del range final: "<<final_rec.first<<" "<<final_rec.second;
         ifstream d_file(data_filename, ios::binary);
         ifstream a_file(aux_filename, ios::binary);
         bool last_it = false;
         Record i_record;
         int p = initial_rec.first;
-        int f = initial_rec.second;
+        char f = initial_rec.second;
         while(!last_it){
+
+            //cout<<"\nf: "<<f;
+            //cout<<"\np: "<<p;
             if(p==final_rec.first && f==final_rec.second) last_it = true;
 
             if(f=='d'){
                 d_file.seekg(sizeof(Header) + sizeof(Record)*p, ios::beg);
                 d_file.read(reinterpret_cast<char *>(&i_record), sizeof(Record));
                 p = i_record.next;
-                f = i_record.file;
+                f = i_record.isAuxNext ? 'a' : 'd';
                 result.push_back(i_record);
             }
             else{
                 a_file.seekg(sizeof(int) + sizeof(Record)*p, ios::beg);
                 a_file.read(reinterpret_cast<char *>(&i_record), sizeof(Record));
                 p = i_record.next;
-                f = i_record.file;
+                f = i_record.isAuxNext ? 'a' : 'd';
                 result.push_back(i_record);
             }
         }
         //copiar ultimo registro
+        a_file.close();
+        d_file.close();
+        auto fin = std::chrono::high_resolution_clock::now();
+        std::chrono::duration<double, std::milli> duracion = fin - inicio;
+        std::cout << "La búsqueda por rango tardó " << duracion.count() << " ms en ejecutarse." << std::endl;
+
         return result;
+
     }
     void initialInsert(Record record, bool rebuild, fstream & d_file){ //se reciben los primeros 20 registros de forma
+        auto inicio = std::chrono::high_resolution_clock::now();
+
         // ordenada
         //dado un vector de registros, insertar inicialmente de acuerdo al tamaño inicial del archivo de datos{
         //fstream d_file(rebuild ? "temp.dat" : data_filename, ios::in | ios::out | ios::binary);
@@ -270,9 +292,19 @@ public:
         header.cur_size = data_size;
         d_file.seekp(0, ios::beg);
         d_file.write(reinterpret_cast<char *>(&header), sizeof(Header));
-    };//inserciones iniciales para evitar errores;
+        auto fin = std::chrono::high_resolution_clock::now();
+        std::chrono::duration<double, std::milli> duracion = fin - inicio;
+        std::cout << "La inserción inicial tardó " << duracion.count() << " ms en ejecutarse." << std::endl;
+
+    };//inserciones iniciales para evitar efrrores;
+
+    int size(){
+        return data_size + aux_size;
+    }
 
     void rebuild(){
+        auto inicio = std::chrono::high_resolution_clock::now();
+
         cout<<"\nIniciando rebuild...";
         ifstream d_file(data_filename, ios::binary);
         fstream a_file(aux_filename,ios::in | ios::out | ios::binary);
@@ -285,7 +317,7 @@ public:
         data_size = 0;
         data_max_size = new_header.max_size;
         aux_size = 0;
-        cout<<"\ndata max size before rebuild: "<<data_max_size;
+        //cout<<"\ndata max size before rebuild: "<<data_max_size;
         t_file.seekp(0, ios::beg);
         t_file.write(reinterpret_cast<char *>(&new_header), sizeof(Header));
         a_file.seekp(0, ios::beg);
@@ -328,9 +360,13 @@ public:
         a_file.close();
         t_file.close();
         copy_and_upd();
-        cout<<"\n==============Datos after rebuild:===============";
-        showData();
-        cout<<"\n=================================================";
+        //cout<<"\n==============Datos after rebuild:===============";
+        //showData();
+        //cout<<"\n=================================================";
+        auto fin = std::chrono::high_resolution_clock::now();
+        std::chrono::duration<double, std::milli> duracion = fin - inicio;
+        std::cout << "La reconstrucción tardó " << duracion.count() << " ms en ejecutarse." << std::endl;
+
     };
 
     void copy_and_upd(){
@@ -367,6 +403,8 @@ public:
     }
 
     bool search(Record record){
+        auto inicio = std::chrono::high_resolution_clock::now();
+
         vector<pair<int, char>> pointers = binary_search(record, 0, data_size-1, false, false);
         pair<int, char> mid = pointers[1];
         if(mid.first != -1){
@@ -385,6 +423,10 @@ public:
             cout<<"\nNo encontró el registro";
             return false;
         }
+        auto fin = std::chrono::high_resolution_clock::now();
+        std::chrono::duration<double, std::milli> duracion = fin - inicio;
+        std::cout << "La búsqueda tardó " << duracion.count() << " ms en ejecutarse." << std::endl;
+
     }
 
     void incrementAux(){
@@ -395,7 +437,9 @@ public:
     }
 
     void insert(Record record){ //pendiente validar el pushback
-        cout<<"insertando registro de "<<record.nombre<<endl;
+        auto inicio = std::chrono::high_resolution_clock::now();
+
+        //cout<<"insertando registro de "<<record.nombre<<endl;
         if(data_size < data_max_size){
             //fstream t_file("temp.dat", ios::in | ios::out | ios::binary);
             fstream d_file(data_filename, ios::in | ios::out | ios::binary);
@@ -522,10 +566,15 @@ public:
                 rebuild();
             }
         }
+        auto fin = std::chrono::high_resolution_clock::now();
+        std::chrono::duration<double, std::milli> duracion = fin - inicio;
+        std::cout << "La inserción tardó " << duracion.count() << " ms en ejecutarse." << std::endl;
+
     }
 
-    bool remove(Record record){
+    bool remove(string key){
         //TODO
+        return false;
     };
 
     void showDataDat(){
@@ -556,6 +605,7 @@ public:
                 ian = record.isAuxNext;
                 record.showData();
                 cout<<"\nnext: "<<record.next;
+                cout<<"\nfile: "<<record.file;
             }
             else{
                 if(ian){
@@ -564,6 +614,7 @@ public:
                     next = record.next;
                     ian = record.isAuxNext;
                     record.showData();
+                    cout<<"\nfile: "<<record.file;
                     cout<<"\nnext: "<<record.next;
                 }
                 else{
@@ -573,6 +624,7 @@ public:
                     ian = record.isAuxNext;
                     record.showData();
                     cout<<"\nnext: "<<record.next;
+                    cout<<"\nfile: "<<record.file;
                 }
             }
         }
@@ -585,6 +637,8 @@ public:
     //Esto se hace ya que al insertar o remover, necesito el nodo anterior y el nodo despues
     //para busquedas, simplemente retorno la informacion en el par del centro
     vector<pair<int, char>> binary_search(Record param_record, int p, int q, bool insert, bool rs){
+        auto inicio = std::chrono::high_resolution_clock::now();
+
         ifstream d_file(data_filename, ios::binary);
         ifstream a_file(aux_filename, ios::binary);
         pair<int, char> none = make_pair(-1, 'x');
@@ -594,9 +648,9 @@ public:
         d_file.seekg(position, ios::beg);
         Record record, rp, rq;
         d_file.read(reinterpret_cast<char *>(&record), sizeof(Record));
-        cout<<"\nKeys a comparar";
-        cout<<"\n"<<record.nombre;
-        cout<<"\n"<<param_record.nombre;
+        //cout<<"\nKeys a comparar";
+        //cout<<"\n"<<record.nombre;
+        //cout<<"\n"<<param_record.nombre;
 
         //evaluar valores en p y q, puede reduir la complejidad logaritmica
         d_file.seekg(sizeof(Header) + sizeof(Record)*p, ios::beg);
@@ -605,27 +659,35 @@ public:
         d_file.read(reinterpret_cast<char *>(&rq), sizeof(Record));
         if(rp == param_record){
             if(!rs && insert){
-                cout<<"\nLa llave ya está";
+                //cout<<"\nLa llave ya está";
+                d_file.close();
+                a_file.close();
                 return result;
             }
             else{
                 result[1] = make_pair(p, 'd');
+                d_file.close();
+                a_file.close();
                 return result;
             }
         }
         if(rq == param_record){
             if(!rs && insert){
+                d_file.close();
+                a_file.close();
                 return result;
             }
             else{
-                cout<<"\nLa llave ya está";
+                //cout<<"\nLa llave ya está";
                 result[1] = make_pair(q, 'd');
+                d_file.close();
+                a_file.close();
                 return result;
             }
         }
 
         if(q==p) {
-            cout<<"\nQ es igual a P...";
+            //cout<<"\nQ es igual a P...";
             if (!insert || rs) { //si solo estoy haciendo busqueda no necesito las conexiones
                 if (record != param_record) {
                     //iterar en el aux{
@@ -638,6 +700,7 @@ public:
                             cout<<"\nnom1..."<<cur_rec.nombre;
                             cout<<"\nnom2..."<<cur_rec.nombre;
                             result[1] = make_pair(i, 'a');
+                            break;
                         }
                     }
                     d_file.close();
@@ -662,10 +725,20 @@ public:
                     //registro anterior en el archivo de datos
                     int logic_prev_position = p-1;
                     long prev_position = sizeof(Header) + ((p - 1) * sizeof(Record));
-                    d_file.seekg(prev_position, ios::beg);
+                    d_file.seekg(sizeof(Header) + ((p-1) * sizeof(Record)), ios::beg);
                     Record prev_record;
                     d_file.read(reinterpret_cast<char *>(&prev_record), sizeof(Record));
+                    cout<<"\nPrevrec: "<<prev_record.nombre;
+                    //validar
+                    if(rs && (prev_record == param_record)){
+                        result[1] = make_pair(logic_prev_position, 'd');
+                        cout<<"\nSe encontró en el anterior... :)";
+                        d_file.close();
+                        a_file.close();
+                        return result;
+                    }
                     //leo el siguiente
+                    //===
                     if (!prev_record.isAuxNext) {
 
                         pair<int, char> prev_rec = make_pair(logic_prev_position, 'd');
@@ -683,7 +756,13 @@ public:
                         a_file.read(reinterpret_cast<char *>(&next_record), sizeof(Record));
 
                         while (!(prev_record < param_record && next_record > param_record)) {
-
+                            if(rs && (prev_record == param_record)){
+                                result[1] = make_pair(logic_prev_position, 'd');
+                                cout<<"\nSe encontró en el anterior... :)";
+                                d_file.close();
+                                a_file.close();
+                                return result;
+                            }
                             prev_position = next_position;
                             logic_prev_position = logic_next_position;
 
@@ -716,10 +795,12 @@ public:
                 //quiere decir que la llave ya está presente en el dat
                 //no se puede realizar la insercion
                 //retornar none
-                cout<<"\nYa existe la llave\n";
+                //cout<<"\nYa existe la llave\n";
                 if(rs){
                     result[1] = make_pair(p, 'd');
                 }
+                d_file.close();
+                a_file.close();
                 return result;
             }
             else if (record < param_record) {
@@ -729,18 +810,22 @@ public:
                 Record prev_record;
                 d_file.read(reinterpret_cast<char *>(&prev_record), sizeof(Record));
                 //evaluar iterar en aux
-                cout<<"\nprev data name: "<<prev_record.nombre;
-                cout<<"\nprev data next: "<<prev_record.next;
-                cout<<"\ncurrent p value: "<<p;
-                cout<<"\ndata max size: "<<data_max_size;
+              //  cout<<"\nprev data name: "<<prev_record.nombre;
+                //cout<<"\nprev data next: "<<prev_record.next;
+                //cout<<"\ncurrent p value: "<<p;
+                //cout<<"\ndata max size: "<<data_max_size;
                 if (p == data_max_size-1 && prev_record.next == -1) {//validar despues este escenario
                     //insertar en el aux
                      result[1] = make_pair(-3, 'a');//pushback
+                    d_file.close();
+                    a_file.close();
+
                     //return result;
 
                 } else {
                     //registro posterior en el archivo de datos
                        //leo el siguiente
+
                     if (!prev_record.isAuxNext) {
                         pair<int, char> prev_rec = make_pair(p, 'd');
                         pair<int, char> next_rec = make_pair(p+1, 'd');
@@ -756,10 +841,17 @@ public:
                         a_file.seekg(next_position, ios::beg);//ubicar el registro
                         Record next_record;
                         a_file.read(reinterpret_cast<char *>(&next_record), sizeof(Record));
+
                         bool pal = false;
                         while (!(prev_record < param_record && next_record > param_record) ) {
-                            if(prev_record == param_record || next_record==param_record)
-                                cout<<"\nSe encontro una igualdad...";
+                            if(rs && (next_record == param_record)){
+                                result[1] = make_pair(logic_next_position, next_record.file);
+                                cout<<"\nSe encontró en el posterior... :)";
+                                d_file.close();
+                                a_file.close();
+                                return result;
+                            }
+
                             prev_position = next_position;
                             logic_prev_position = logic_next_position;
 
@@ -801,25 +893,40 @@ public:
         else{
             //llamar recursivamente a la funcion
             int b_pos = floor((q+p)/2);
-            cout<<"\nposicion de p: "<<p;
-            cout<<"\nposicion de q: "<<q;
-            cout<<"\nposicion del medio: "<<b_pos;
+            //cout<<"\nposicion de p: "<<p;
+            //cout<<"\nposicion de q: "<<q;
+            //cout<<"\nposicion del medio: "<<b_pos;
             position = sizeof(Header) + (b_pos * sizeof(Record));
             d_file.seekg(position, ios::beg);
             d_file.read(reinterpret_cast<char *>(&record), sizeof(Record));
-            if(param_record < record){
-                cout<<endl<<param_record.nombre<<" es menor que "<<record.nombre;
+            if(param_record == record && !insert && !rs){
+                d_file.close();
+                a_file.close();
+                result[1] = make_pair(b_pos, 'd');
+                auto fin = std::chrono::high_resolution_clock::now();
+                std::chrono::duration<double, std::milli> duracion = fin - inicio;
+                std::cout << "La búsqueda binaria tardó " << duracion.count() << " ms en ejecutarse." << std::endl;
+
+                return result;
+            }
+            else if(param_record < record){
+                //cout<<endl<<param_record.nombre<<" es menor que "<<record.nombre;
                 d_file.close();
                 a_file.close();
                 return binary_search(param_record, p,b_pos, insert, rs);
             }
             else {
-                cout<<endl<<param_record.nombre<<" es mayor o igual que "<<record.nombre;
+                //cout<<endl<<param_record.nombre<<" es mayor o igual que "<<record.nombre;
                 d_file.close();
                 a_file.close();
                 return binary_search(param_record, b_pos+1,q, insert, rs);
             }
+
         }
+        auto fin = std::chrono::high_resolution_clock::now();
+        std::chrono::duration<double, std::milli> duracion = fin - inicio;
+        std::cout << "La búsqueda binaria tardó " << duracion.count() << " ms en ejecutarse." << std::endl;
+
     };
 };
 }
