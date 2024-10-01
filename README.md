@@ -1,5 +1,7 @@
 # Proyecto de Estructuras de Datos Avanzadas
 
+## Integrantes: Luis Robledo
+
 ## Introducción
 
 Este proyecto implementa y compara tres estructuras de datos avanzadas para el manejo eficiente de grandes volúmenes de información: ISAM con índice disperso, hashing extensible y archivo secuencial con espacio auxiliar y punteros. El objetivo es analizar el rendimiento de estas estructuras en operaciones de búsqueda, inserción y eliminación de datos.
@@ -24,7 +26,7 @@ El hashing extensible es una técnica de hash dinámica que se adapta al crecimi
 
 - Utiliza un directorio que se duplica cuando es necesario.
 - Los buckets tienen un tamaño fijo y se dividen cuando se llenan.
-- Ofrece un rendimiento cercano a O(1) para búsquedas e inserciones.
+- Ofrece un rendimiento cercano a O(1) para búsquedas e inserciones. 
 
 ### 3. Archivo Secuencial con Espacio Auxiliar y Punteros
 
@@ -38,31 +40,78 @@ Esta estructura combina la eficiencia del almacenamiento secuencial con la flexi
 
 Se realizaron pruebas de rendimiento para operaciones de búsqueda, inserción y eliminación en cada estructura. Los tiempos se midieron en milisegundos.
 
-| Operación | Hashing Extensible | Archivo Secuencial | ISAM (estimado) |
-|-----------|--------------------|--------------------|-----------------|
-| Búsqueda  | 0.5 ms             | 15 ms              | 5 ms            |
-| Inserción | 1.2 ms             | 10 ms              | 8 ms            |
-| Eliminación| 0.8 ms            | 20 ms              | 10 ms           |
-
-Nota: Los tiempos para ISAM son estimados ya que no se completaron las pruebas.
+| Operación | Hashing Extensible | Archivo Secuencial |
+|-----------|--------------------|--------------------|
+| Búsqueda  | 0.5 ms             | 15 ms              |
+| Inserción | 1.2 ms             | 10 ms              |
+| Eliminación| 0.8 ms            |                    |
 
 ## Pruebas
 
 Las pruebas se realizaron utilizando la interfaz de línea de comandos (CLI). A continuación, se muestra un ejemplo de cómo se ejecutaron y visualizaron las pruebas:
 
 ```
-$ ./run_tests
-Ejecutando pruebas para Hashing Extensible...
-Búsqueda: 0.5 ms
-Inserción: 1.2 ms
-Eliminación: 0.8 ms
+Ingrese su consulta (termine con ';'):
+select * from table;
 
-Ejecutando pruebas para Archivo Secuencial...
-Búsqueda: 15 ms
-Inserción: 10 ms
-Eliminación: 20 ms
+Consulta v├ílida... trayendo todos los registros.
 
-ISAM: Pruebas no completadas
+|=====================================================================|
+|Nombre              |Apellido            |Codigo    |Carrera   |ciclo|
+|====================|====================|==========|==========|=====|
+|=====================================================================|
+|Nombre              |Apellido            |Codigo    |Carrera   |ciclo|
+|====================|====================|==========|==========|=====|
+|Agustina            |Romero              |345682    |EE        |3    |
+|=====================================================================|\_ pos: 0 | file: d | nextPos: 1 | nextFile: d
+|Alejandro           |Ruiz                |456780    |IT        |5    |
+|=====================================================================|\_ pos: 1 | file: d | nextPos: 2 | nextFile: d
+|Alfonso             |Arellano            |012353    |IT        |6    |
+|=====================================================================|\_ pos: 2 | file: d | nextPos: 3 | nextFile: d
+|Alonso              |Vergara             |456784    |IT        |6    |
+|=====================================================================|\_ pos: 3 | file: d | nextPos: 4 | nextFile: d
+|Amanda              |Espinoza            |345681    |CS        |2    |
+|=====================================================================|\_ pos: 4 | file: d | nextPos: 5 | nextFile: d
+
+....
+======para extendible========
+.....
+posicion del indice que estoy leyendo: 944
+leyendo...
+posicion del indice despues de leer: 961
+Data del indice leido...
+|---------------------- Index Record ----------------------|
+| Size: 5     | Cadena: 01000        | Pos: 3812  | Status: 1     |
+|----------------------------------------------------------|
+Data del bucket leido...
+|----------------------- Bucket Data -----------------------|
+| Local Depth: 5     | Size: 0     | NextDel: -1    | NextBucket: -1    |
+|----------------------------------------------------------|
+|  Records                                                |
+|----------------------------------------------------------|
+|----------------------------------------------------------|
+posicion del indice que estoy leyendo: 961
+leyendo...
+posicion del indice despues de leer: 978
+Data del indice leido...
+|---------------------- Index Record ----------------------|
+| Size: 5     | Cadena: 11000        | Pos: 8164  | Status: 1     |
+|----------------------------------------------------------|
+Data del bucket leido...
+|----------------------- Bucket Data -----------------------|
+| Local Depth: 5     | Size: 3     | NextDel: -1    | NextBucket: -1    |
+|----------------------------------------------------------|
+|  Records                                                |
+|----------------------------------------------------------|
+|Maximiliano         |Bravo               |890126    |IT        |5    |
+|=====================================================================|
+|Lucas               |Arce                |012351    |IT        |4    |
+|=====================================================================|
+|Lautaro             |Calder├│n           |456788    |IT        |4    |
+|=====================================================================|
+|----------------------------------------------------------|
+posicion del indice que estoy leyendo: 978
+.....
 ```
 
 Para más detalles sobre cómo ejecutar las pruebas, consulte la sección "Cómo Ejecutar" más abajo.
