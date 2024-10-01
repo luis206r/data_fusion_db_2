@@ -1,0 +1,3 @@
+C:/Users/luisr/Desktop/UTEC/2024-2/bd2/proyecto_1/data_fusion_db/cmake-build-debug/CMakeFiles/data_fusion_db.dir
+C:/Users/luisr/Desktop/UTEC/2024-2/bd2/proyecto_1/data_fusion_db/cmake-build-debug/CMakeFiles/edit_cache.dir
+C:/Users/luisr/Desktop/UTEC/2024-2/bd2/proyecto_1/data_fusion_db/cmake-build-debug/CMakeFiles/rebuild_cache.dir
