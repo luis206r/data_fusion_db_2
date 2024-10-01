@@ -12,8 +12,15 @@
 #include <algorithm>
 #include "SequentialFile.h"
 #include "ExtendibleHashing.h"
+#include <algorithm> // Para std::transform
+#include <cctype>
 
 using namespace std;
+
+std::string tl(std::string s) {
+    std::transform(s.begin(), s.end(), s.begin(), ::tolower);
+    return s;
+}
 
 template<typename T, typename R>
 class Compiler {
@@ -36,57 +43,81 @@ public:
         stringstream ss(query);
         string command, temp;
         ss >> command;  // Leer SELECT, DELETE o INSERT
+        //cout << "comando: " << command<<endl;// << ", f: " << f << ", table: " << table << ", condition: " <<
+        // condition
+        //cout << "comando min?: " << tl(command)<<endl;
 
-        if (command == "SELECT") {
+        if (tl(command) == "select") {
             selectQuery(ss);
-        } else if (command == "DELETE") {
+        } else if (tl(command) == "delete") {
             deleteQuery(ss);
-        } else if (command == "INSERT") {
+        } else if (tl(command) == "insert") {
             insertQuery(ss);
         }
         else cout<<"Ingrese un comando correcto";
     }
 
 public:
+
     void selectQuery(stringstream &ss) {
-        string table, condition, field, operatorSymbol, temp;
-        ss >> table >> temp >> condition; // Leer tabla, luego "where", luego condición
+        string table, condition, field, f, operatorSymbol, temp;
+        ss >> field >> f >> table; // Leer campo, luego "from", luego tabla
 
-        if (condition == "nombre") {
-            ss >> operatorSymbol;
-            if (operatorSymbol == "=") {
-                string value;
-                ss >> value;
+        // Verificar si es un select * de la tabla especificada
+        if (tl(field) == "*" && tl(f) == "from" && tl(table) == "table") {
 
-                bool found = file->search(value);
-                if(found) cout<<"Se encontró la llave";
-                else  cout<<"No se encontró la llave";
+            // Procesar las consultas con condiciones
+            ss >> temp; // Leer la siguiente parte (debería ser "where" si hay condiciones)
+            if (tl(temp) == "where") {
+                ss >> condition; // Leer la condición
+                ss >> operatorSymbol; // Leer el operador
 
+                if (operatorSymbol == "=") {
+                    string value;
+                    ss >> value;
 
-            } else if (operatorSymbol == "BETWEEN") {
-                if(ct=="seq"){
-                    string val1, val2;
-                    ss >> val1 >> temp >> val2; // Leer valores entre BETWEEN y AND
-                    vector<R> records = file->range_search(val1, val2);
-                    for(auto rec:records){
-                        rec.showData();
+                    bool found = file->search(value);
+                    if (found) {
+                        cout << "Se encontró la llave";
+                    } else {
+                        cout << "No se encontró la llave";
+                    }
+                } else if (operatorSymbol == tl("between")) {
+                    if (ct == "seq") {
+                        string val1, val2;
+                        ss >> val1 >> temp >> val2; // Leer valores entre BETWEEN y AND
+                        vector<R> records = file->range_search(val1, val2);
+                        SEQ::showTableHeader();
+                        for (auto rec : records) {
+                            rec.showData();
+                        }
+                    } else {
+                        cout << "Extendible hashing no soporta la búsqueda por rango";
                     }
                 }
-                else{
-                    cout<<"Extendible hashing no soporta la busqueda por rango";
-                }
-
             }
+
+            else{
+                cout << "\nConsulta válida... trayendo todos los registros.\n";
+                    //vector<R> allRecords = file->getAllRecords(); // Método hipotético
+                    SEQ::showTableHeader();
+                    file->showData();
+            }
+
+
         }
+
+
     }
+
 
 private:
     void deleteQuery(stringstream &ss) {
-        string table, temp;
-        ss >> table >> temp;  // Leer tabla y "where"
+        string is, table, temp;
+        ss >> is >> table >> temp;  // Leer tabla y "where"
 
         // Verificar si hay una condición para eliminar
-        if (temp == "where") {
+        if (tl(is)=="from" && tl(table)=="table" && tl(temp) == "where") {
             string condition, operatorSymbol, value;
             ss >> condition; // Leer la condición (por ejemplo, 'nombre')
             ss >> operatorSymbol; // Leer el operador (por ejemplo, '=')
@@ -95,17 +126,11 @@ private:
             if (condition == "nombre" && operatorSymbol == "=") {
                 if (ct == "seq") {
                     cout<<"Aun no implementado";
-                    bool removed = file->remove(value);
-                    if(removed)cout << "Registro eliminado." << endl;
-                    else cout << "Registro no eliminado" <<endl;
+                    //bool removed = file->remove(value);
+                    //if(removed)cout << "Registro eliminado." << endl;
+                    //else cout << "Registro no eliminado" <<endl;
                     // Buscar el registro en el archivo secuencial
-                   /* SEQ::Record recordToDelete = static_cast<SEQ::Record &&>(file->search(value));
-                    if (recordToDelete.nombre[0] != '\0') { // Verificar que el registro exista
-                        file->remove(recordToDelete); // Llamar al método remove para eliminar el registro
-                        cout << "Registro eliminado correctamente." << endl;
-                    } else {
-                        cout << "Registro no encontrado." << endl;
-                    }*/
+
                 } else {
                     // Si estás usando Extendible Hashing
                     bool removed = file->remove(value);
@@ -122,11 +147,11 @@ private:
 
 
     void insertQuery(stringstream &ss) {
-        string table, temp;
-        ss >> table >> temp;  // Leer tabla y "into"
+        string into, table, temp;
+        ss >> into >> table >> temp;  // Leer tabla y "into"
 
         // Verificar si hay valores a insertar
-        if (temp == "values") {
+        if (tl(into)=="into" && tl(table)=="table" && tl(temp) == "values") {
             // Asumimos que los valores llegan en el siguiente formato:
             // values ('nombre', 'apellido', ...)
             string nombre, apellido, codigo, carrera;

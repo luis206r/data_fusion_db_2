@@ -20,6 +20,13 @@
 
 using namespace std;
 namespace EXTH{
+
+    void showTableHeader(){
+        cout<<"\n|=====================================================================|";
+        cout<<"\n|Nombre              |Apellido            |Codigo    |Carrera   |ciclo|";
+        cout<<"\n|====================|====================|==========|==========|=====|";
+    }
+
 struct Record {
     //esta estructura depende de los datos de mockdata
     //para testear se usara lo siguiente
@@ -40,13 +47,14 @@ struct Record {
     }
 
     void showData() {
-        cout << "\n=========Record data========";
-        cout << "\nNombre: " << nombre;
-        cout << "\nApellido: " << apellido;
-        cout << "\nCodigo: " << codigo;
-        cout << "\nCarrera: " << carrera;
-        cout << "\nCiclo: " << ciclo;
-        cout << "\n============================";
+        std::cout << std::left
+                  << "\n|" << std::setw(20) << nombre
+                  << "|" << std::setw(20) << apellido
+                  << "|" << std::setw(10) << codigo
+                  << "|" << std::setw(10) << carrera
+                  << "|" << std::setw(5) << ciclo
+                  << "|";
+        cout<<"\n|=====================================================================|";
     }
 };
 
@@ -68,12 +76,29 @@ struct Bucket {
         nextBucket = nb;
     };
 
-    void showData() {
+    /*void showData() {
         cout << "\nProfundidad local: " << local_depth;
         cout << "\nSize: " << size;
         cout << "\nNextDel: " << nextDel;
         cout << "\nNextBucket: " << nextBucket;
 
+    }*/
+
+    void showData() {
+        cout << "\n|----------------------- Bucket Data -----------------------|";
+        cout << "\n| Local Depth: " << std::setw(5) << local_depth
+             << " | Size: " << std::setw(5) << size
+             << " | NextDel: " << std::setw(5) << nextDel
+             << " | NextBucket: " << std::setw(5) << nextBucket << " |";
+        cout << "\n|----------------------------------------------------------|";
+        cout << "\n|  Records                                                |";
+        cout << "\n|----------------------------------------------------------|";
+
+        for (int i = 0; i < size; i++) {
+            records[i].showData(); // Llamar a showData de cada registro
+        }
+
+        cout << "\n|----------------------------------------------------------|";
     }
 
     void loadData(fstream &file) {
@@ -101,11 +126,19 @@ struct IndexRecord { //no lo uso
     string cadena;//cadena de bits en string
     long pos;
     int status;//eliminado o no
-    void showData() {
+    /*void showData() {
         cout << "\nsize: " << size;
         cout << "\ncadena: " << cadena;
         cout << "\npos: " << pos;
         cout << "\nstatus: " << status;
+    }*/
+    void showData() {
+        cout << "\n|---------------------- Index Record ----------------------|";
+        cout << "\n| Size: " << std::setw(5) << size
+             << " | Cadena: " << std::setw(12) << cadena
+             << " | Pos: " << std::setw(5) << pos
+             << " | Status: " << std::setw(5) << status << " |";
+        cout << "\n|----------------------------------------------------------|";
     }
 };
 
@@ -376,7 +409,7 @@ public:
             //if (!i_file) break;
 
             // Procesar si el registro no está eliminado
-            if (current_idx.status != -1) {
+            //if (current_idx.status != -1) {
 
                 Bucket bucket;
 
@@ -386,13 +419,13 @@ public:
                 cout << "\nData del bucket leido...";
                 bucket.showData();
                 // Procesar los registros del bucket
-                for (int i = 0; i < bucket.size; i++) {
+                /*for (int i = 0; i < bucket.size; i++) {
                     Record record = bucket.records[i];
                     cout << "==========================\n";
                     record.showData();
                     cout << "==========================\n";
-                }
-            }
+                }*/
+            //}
 
         }
 
@@ -464,6 +497,7 @@ public:
                 cout << "\nSe encontró y se eliminó el registro:\n";
             } else {
                 cout << "\nSe encontró el registro:\n";
+                showTableHeader();
                 f_r.showData();
             }
         } else {
@@ -584,6 +618,10 @@ public:
         i_file.close();
         d_file.close();
     };
+
+    void showData(){
+        scanAll();
+    }
 
     vector<Record> range_search(string a, string b){
 

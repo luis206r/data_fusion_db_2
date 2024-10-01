@@ -26,6 +26,12 @@ using namespace std;
 
 namespace SEQ{
 
+    void showTableHeader(){
+        cout<<"\n|=====================================================================|";
+        cout<<"\n|Nombre              |Apellido            |Codigo    |Carrera   |ciclo|";
+        cout<<"\n|====================|====================|==========|==========|=====|";
+    }
+
 struct Record{
     char nombre[20];
     char apellido[20];
@@ -46,13 +52,14 @@ struct Record{
     }
 
     void showData() {
-        cout<<"\n=========Record data========";
-        cout<<"\nNombre: "<<nombre;
-        cout<<"\nApellido: "<<apellido;
-        cout<<"\nCodigo: "<<codigo;
-        cout<<"\nCarrera: "<<carrera;
-        cout<<"\nCiclo: "<<ciclo;
-        cout<<"\n============================";
+        std::cout << std::left
+                  << "\n|" << std::setw(20) << nombre
+                  << "|" << std::setw(20) << apellido
+                  << "|" << std::setw(10) << codigo
+                  << "|" << std::setw(10) << carrera
+                  << "|" << std::setw(5) << ciclo
+                  << "|";
+        cout<<"\n|=====================================================================|";
     }
 
     // Sobrecargar el operador <
@@ -90,6 +97,8 @@ struct Record{
         }
     }
 };
+
+
 
 struct Header{
     int max_size;
@@ -151,7 +160,6 @@ public:
     }
 
     void loadData(fstream &d_file, fstream &a_file) {
-
         d_file.seekg(0, ios::beg);
         Header header;
         d_file.read(reinterpret_cast<char *>(&header), sizeof(Header));
@@ -260,7 +268,7 @@ public:
 
     }
     void initialInsert(Record record, bool rebuild, fstream & d_file){ //se reciben los primeros 20 registros de forma
-        auto inicio = std::chrono::high_resolution_clock::now();
+        //auto inicio = std::chrono::high_resolution_clock::now();
 
         // ordenada
         //dado un vector de registros, insertar inicialmente de acuerdo al tamaño inicial del archivo de datos{
@@ -292,9 +300,9 @@ public:
         header.cur_size = data_size;
         d_file.seekp(0, ios::beg);
         d_file.write(reinterpret_cast<char *>(&header), sizeof(Header));
-        auto fin = std::chrono::high_resolution_clock::now();
-        std::chrono::duration<double, std::milli> duracion = fin - inicio;
-        std::cout << "La inserción inicial tardó " << duracion.count() << " ms en ejecutarse." << std::endl;
+        //auto fin = std::chrono::high_resolution_clock::now();
+        //std::chrono::duration<double, std::milli> duracion = fin - inicio;
+        //std::cout << "La inserción inicial tardó " << duracion.count() << " ms en ejecutarse." << std::endl;
 
     };//inserciones iniciales para evitar efrrores;
 
@@ -416,6 +424,7 @@ public:
             Record read_rec;
             file.read(reinterpret_cast<char *>(&read_rec), sizeof(Record));
             cout<<"\nSe encontró el registro: ";
+            showTableHeader();
             read_rec.showData();
             return true;
         }
@@ -450,7 +459,7 @@ public:
             /*cout<<"\n==========Datos insertados hasta ahora==========\n";
             showDataDat();
             cout<<"\n================================================\n";*/
-            cout<<"\nIniciando búsqueda binaria...";
+            cout<<"\nIniciando búsqueda binaria para "<<record.nombre<<"...";
             //asumiendo que no tengo elementos eliminados en el archivo de datos
             vector<pair<int, char>> pointers = binary_search(record, 0, data_size-1, true, false);
             fstream d_file(data_filename, ios::in | ios::out | ios::binary);
@@ -562,13 +571,14 @@ public:
                 }
             }
             if(aux_size == aux_max_size){
+                //showTableHeader();
                 showData();
                 rebuild();
             }
         }
         auto fin = std::chrono::high_resolution_clock::now();
         std::chrono::duration<double, std::milli> duracion = fin - inicio;
-        std::cout << "La inserción tardó " << duracion.count() << " ms en ejecutarse." << std::endl;
+        std::cout << "\nLa inserción de "<<record.nombre<<" tardó " << duracion.count() << " ms en ejecutarse.";
 
     }
 
@@ -595,36 +605,47 @@ public:
         ifstream a_file(aux_filename, ios::binary);
         Record record;
         d_file.seekg(sizeof(Header), ios::beg);
+        int ntp = 0;
         int next = -5;
         bool ian = false;
+        showTableHeader();
         while(next!=-1){
             if (next==-5){
                 d_file.seekg(sizeof(Header), ios::beg);
                 d_file.read(reinterpret_cast<char *>(&record), sizeof(Record));
-                next = record.next;
-                ian = record.isAuxNext;
                 record.showData();
-                cout<<"\nnext: "<<record.next;
-                cout<<"\nfile: "<<record.file;
+                cout<<"\\_ pos: "<<ntp;
+                cout<<" | file: "<<record.file;
+                cout<<" | nextPos: "<<record.next;
+                cout<<" | nextFile: "<<(record.isAuxNext ? 'a' : 'd');
+                ian = record.isAuxNext;
+                next = record.next;
+                ntp = next;
             }
             else{
                 if(ian){
                     a_file.seekg(sizeof(int) + next*sizeof(Record), ios::beg);
                     a_file.read(reinterpret_cast<char *>(&record), sizeof(Record));
+                    record.showData();
+                    cout<<"\\_ pos: "<<ntp;
+                    cout<<" | file: "<<record.file;
+                    cout<<" | nextPos: "<<record.next;
+                    cout<<" | nextFile: "<<(record.isAuxNext ? 'a' : 'd');
                     next = record.next;
                     ian = record.isAuxNext;
-                    record.showData();
-                    cout<<"\nfile: "<<record.file;
-                    cout<<"\nnext: "<<record.next;
+                    ntp = next;
                 }
                 else{
                     d_file.seekg(sizeof(Header) + next*sizeof(Record), ios::beg);
                     d_file.read(reinterpret_cast<char *>(&record), sizeof(Record));
+                    record.showData();
+                    cout<<"\\_ pos: "<<ntp;
+                    cout<<" | file: "<<record.file;
+                    cout<<" | nextPos: "<<record.next;
+                    cout<<" | nextFile: "<<(record.isAuxNext ? 'a' : 'd');
                     next = record.next;
                     ian = record.isAuxNext;
-                    record.showData();
-                    cout<<"\nnext: "<<record.next;
-                    cout<<"\nfile: "<<record.file;
+                    ntp = next;
                 }
             }
         }
@@ -728,7 +749,7 @@ public:
                     d_file.seekg(sizeof(Header) + ((p-1) * sizeof(Record)), ios::beg);
                     Record prev_record;
                     d_file.read(reinterpret_cast<char *>(&prev_record), sizeof(Record));
-                    cout<<"\nPrevrec: "<<prev_record.nombre;
+                    //cout<<"\nPrevrec: "<<prev_record.nombre;
                     //validar
                     if(rs && (prev_record == param_record)){
                         result[1] = make_pair(logic_prev_position, 'd');

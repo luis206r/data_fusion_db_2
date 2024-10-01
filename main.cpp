@@ -221,6 +221,12 @@ void menu(){
                 seqCompiler.processQuery(query); // Usar secuencial para DELETE
             } else if (query.find("SELECT") != string::npos) {
                 seqCompiler.processQuery(query); // Usar secuencial para SELECT
+            }  else if (query.find("delete") != string::npos) {
+                seqCompiler.processQuery(query); // Usar secuencial para DELETE
+            } else if (query.find("select") != string::npos) {
+                seqCompiler.processQuery(query); // Usar secuencial para SELECT
+            } else if (query.find("insert") != string::npos) {
+                seqCompiler.processQuery(query); // Usar secuencial para SELECT
             } else {
                 cout << "Consulta no válida. Intente de nuevo." << endl;
             }
@@ -243,7 +249,7 @@ void menu(){
         cout << "\nBienvenido al sistema de consultas. Escriba 'exit;' para salir." << endl;
 
 
-        Compiler<EXTH::ExtendibleHashing, EXTH::Record> seqCompiler("seq", &exFile);
+        Compiler<EXTH::ExtendibleHashing, EXTH::Record> seqCompiler("ext", &exFile);
         while(true){
 
             cout << "\n\nIngrese su consulta (termine con ';'):" << endl;
@@ -273,6 +279,12 @@ void menu(){
             } else if (query.find("DELETE") != string::npos) {
                 seqCompiler.processQuery(query); // Usar secuencial para DELETE
             } else if (query.find("SELECT") != string::npos) {
+                seqCompiler.processQuery(query); // Usar secuencial para SELECT
+            }  else if (query.find("delete") != string::npos) {
+                seqCompiler.processQuery(query); // Usar secuencial para DELETE
+            } else if (query.find("select") != string::npos) {
+                seqCompiler.processQuery(query); // Usar secuencial para SELECT
+            } else if (query.find("insert") != string::npos) {
                 seqCompiler.processQuery(query); // Usar secuencial para SELECT
             } else {
                 cout << "Consulta no válida. Intente de nuevo." << endl;
