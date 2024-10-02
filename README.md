@@ -2,6 +2,8 @@
 
 ## Integrantes: Luis Robledo
 
+### Video Explicativo [Drive]([https://github.com](https://drive.google.com/file/d/1td9SVl_KiWwNvAjUvMxyT5kIt9rgn3vy/view?usp=sharing) "Ver")
+
 ## Introducción
 
 Este proyecto implementa y compara tres estructuras de datos avanzadas para el manejo eficiente de grandes volúmenes de información: ISAM con índice disperso, hashing extensible y archivo secuencial con espacio auxiliar y punteros. El objetivo es analizar el rendimiento de estas estructuras en operaciones de búsqueda, inserción y eliminación de datos.
@@ -135,18 +137,38 @@ Cada registro contiene información de un estudiante, incluyendo nombre, apellid
 
 1. Compile el proyecto:
    ```
-   $ make
+   $ g++ -o main main.cpp
    ```
 
 2. Ejecute el programa principal:
    ```
    $ ./main
    ```
+3. Eliga la opcion del menu:
 
-3. Para ejecutar las pruebas:
-   ```
-   $ ./run_tests
-   ```
+   ====================================================================
+====================================================================
+====================================================================
+====================================================================
+  ____        _        _____           _
+ |  _ \  __ _| |_ __ _|  ___|   _ ___(_) ___  _ __
+ | | | |/ _` | __/ _` | |_ | | | / __| |/ _ \| '_ \
+ | |_| | (_| | || (_| |  _|| |_| \__ \ | (_) | | | |
+ |____/ \__,_|\__\__,_|_|   \__,_|___/_|\___/|_| |_|
+
+
+                  by luisr
+====================================================================
+====================================================================
+====================================================================
+====================================================================
+
+Seleccione la estructura
+1. Sequential File
+2. Extendible Hashing
+3. Limpiar archivos
+4. Salir
+Ingrese opci├│n:
 
 ## Conclusiones
 
