@@ -2,7 +2,7 @@
 
 ## Integrantes: Luis Robledo
 
-### Video Explicativo [Drive](https://github.com](https://drive.google.com/file/d/1td9SVl_KiWwNvAjUvMxyT5kIt9rgn3vy/view?usp=sharing)
+### Video Explicativo [Drive](https://drive.google.com/file/d/1td9SVl_KiWwNvAjUvMxyT5kIt9rgn3vy/view?usp=sharing "Ver video")
 
 ## Introducción
 
