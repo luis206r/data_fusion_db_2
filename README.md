@@ -8,6 +8,8 @@
 
 Este proyecto implementa y compara tres estructuras de datos avanzadas para el manejo eficiente de grandes volúmenes de información: ISAM con índice disperso, hashing extensible y archivo secuencial con espacio auxiliar y punteros. El objetivo es analizar el rendimiento de estas estructuras en operaciones de búsqueda, inserción y eliminación de datos.
 
+Se logaron implementar las técnicas de Extendible Hashing, y Sequentia File. El isam sparse no se pudo terminar
+
 El conjunto de datos utilizado para las pruebas es similar a un registro de estudiantes universitarios, con campos como nombre, apellido, código, carrera y ciclo.
 
 ## Técnicas Utilizadas
@@ -28,7 +30,16 @@ El hashing extensible es una técnica de hash dinámica que se adapta al crecimi
 
 - Utiliza un directorio que se duplica cuando es necesario.
 - Los buckets tienen un tamaño fijo y se dividen cuando se llenan.
-- Ofrece un rendimiento cercano a O(1) para búsquedas e inserciones. 
+- Ofrece un rendimiento cercano a O(1) para búsquedas e inserciones.
+
+Las inserciones se hacer habiendo hasheado la llave de indexacion del registro a insertar. Una vez hecho eso, si el bucket asociado a ese hash tiene espacio, se inserta. En caso contrario se hace un split de ese bucket, y cada uno se asocia a una cadena hash concatenada inicialmente con un nuevo char que es 0 o 1. Esto aumenta la profundidad global de la estructura. El acceso a los registros es casi O(K), con k registros en el bucket. En caso de que haya overflow seria O(K+X), con X registros en el bucket del overflow. Sin embargo, en general es O(1).
+En caso no se encuentre el bucket, se procede a generar una nueva cadena hash con la profundidad anterior y volver a buscar en el bucket asociado a esta.
+
+Las búsquedas También tienen la misma complejidad, ya que se hace el mismo proceso que en la inserción, pero sono se verifica la existencia del registro, por lo que la complejidad también es O(1).
+
+Para la eliminación, lo que se está haciendo es, una vez que un bucket se quede sin espacio, se procede a marcar como libre, y puede usarse para nuevos buckets creados. Este escenario es util cuando spliteamos un bucket en 2, ya que uno de ellos se asocia al espacio libre que esta marcado, y el otro se escribe al final del archivo. En el indice, dado que los registros de indice son de longitud variable, estos se marcan como eliminados.
+
+Esta estructura no sporta la búsqueda por rango.
 
 ### 3. Archivo Secuencial con Espacio Auxiliar y Punteros
 
@@ -38,6 +49,16 @@ Esta estructura combina la eficiencia del almacenamiento secuencial con la flexi
 - Se utiliza un espacio auxiliar para nuevas inserciones.
 - Los punteros mantienen el orden lógico de los registros.
 
+Para la insercion, se esta considerando siempre mantener el archivo de datos principal ordenado. Todas las nuevas inserciones se realizan en el archivo auxiliar, pero previamente se realiza una busqueda binaria en el archivo de datos. Esto me permite obtener el registro anterior, y posterior a la llave a insertar. dado que se usan punteros, la insercion es similar a la de un Linked List. La complejidad seria O(logN) + O(K), con N registros en el archivo principal de datos, y K registros en el archivo auxiliar
+
+Para la busqueda, se realiza una busqueda binaria en el archivo de datos en el archivo principal y auxiliar. La complejdad es la misma
+
+Para la busqueda por rango, se hace exactamente lo mismo que una insercion, pero no para insertar, sino para buscar el nodo anterior o posterior. Esto me permite, en caso la llave no exista, saber desde que registro y hasta que registro debo leer siguiendo los punteros. La complejidad seria 2*O(logN) + 2*O(K) = O(logN) + O(K).
+
+Para la eliminacion, si se remueve el registro del archivo principal, se llena con uno del espacio auxiliar que encaje. si se elimina del auxiliar la complejidad se reduce. Esto es valido gracias a los punteros, y se toma en cuenta que simpre hay que tener el archivo de datos principal lleno.
+
+El rebuild simplemente sigue los punteros.
+
 ## Resultados Experimentales
 
 Se realizaron pruebas de rendimiento para operaciones de búsqueda, inserción y eliminación en cada estructura. Los tiempos se midieron en milisegundos.
@@ -46,11 +67,11 @@ Se realizaron pruebas de rendimiento para operaciones de búsqueda, inserción y
 |-----------|--------------------|--------------------|
 | Búsqueda  | 0.5 ms             | 15 ms              |
 | Inserción | 1.2 ms             | 10 ms              |
-| Eliminación| 0.8 ms            |                    |
+| Eliminación| 0.8 ms            | 8 ms               |
 
 ## Pruebas
 
-Las pruebas se realizaron utilizando la interfaz de línea de comandos (CLI). A continuación, se muestra un ejemplo de cómo se ejecutaron y visualizaron las pruebas:
+Las pruebas se realizaron utilizando la interfaz de línea de comandos (CLI), y un parser básico hecho con clases y metodos en C++. A continuación, se muestra un ejemplo de cómo se ejecutaron y visualizaron las pruebas:
 
 ```
 Ingrese su consulta (termine con ';'):
@@ -176,6 +197,5 @@ Este proyecto demuestra las ventajas y desventajas de diferentes estructuras de 
 
 La implementación del ISAM con índice disperso, aunque no se probó completamente, promete ser una solución eficiente para aplicaciones que requieren tanto acceso secuencial como aleatorio a los datos.
 
-Para futuros trabajos, se recomienda completar la implementación y pruebas del ISAM, así como explorar otras estructuras de datos avanzadas para comparar su rendimiento en escenarios similares.
 
 
