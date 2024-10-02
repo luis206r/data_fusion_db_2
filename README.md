@@ -167,6 +167,7 @@ Cada registro contiene información de un estudiante, incluyendo nombre, apellid
    ```
 3. Eliga la opcion del menu:
 
+```
    ====================================================================
 ====================================================================
 ====================================================================
@@ -190,6 +191,7 @@ Seleccione la estructura
 3. Limpiar archivos
 4. Salir
 Ingrese opci├│n:
+```
 
 ## Conclusiones
 
